@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ougabriel/full-stack-blogging-app.git'
+                git branch: 'main', url: 'https://github.com/letslearndevops9/Devops-project-1.git'
             }
         }
         stage('Compile') {
@@ -26,8 +26,8 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqubeServer') {
-                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Blogging-app -Dsonar.projectKey=Blogging-app \
+                withSonarQubeEnv('SonarQube') {
+                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Blogging3-app -Dsonar.projectKey=Blogging3-app \
                           -Dsonar.java.binaries=target'''
                 }
             }
@@ -48,28 +48,28 @@ pipeline {
             steps {
                 script{
                 withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                sh "docker build -t ugogabriel/gab-blogging-app ."
+                sh "docker build -t letslearndevops9/devops-project-1 ."
                 }
                 }
             }
         }
         stage('Trivy Image Scan') {
             steps {
-                sh "trivy image --format table -o image.html ugogabriel/gab-blogging-app:latest"
+                sh "trivy image --format table -o image.html letslearndevops9/devops-project-1:latest"
             }
         }
         stage('Docker Push Image') {
             steps {
                 script{
                 withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                    sh "docker push ugogabriel/gab-blogging-app"
+                    sh "docker push letslearndevops9/devops-project-1"
                 }
                 }
             }
         }
         stage('K8s Deploy') {
             steps {
-               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://8C322B4360C303BA27FC0EE9B7663E21.gr7.us-east-1.eks.amazonaws.com']]) {
                     sh "kubectl apply -f deployment-service.yml"
                     sleep 20
                 }
@@ -77,13 +77,12 @@ pipeline {
         }
         stage('Verify Deployment') {
             steps {
-               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://8C322B4360C303BA27FC0EE9B7663E21.gr7.us-east-1.eks.amazonaws.com']]) {
                     sh "kubectl get pods"
                     sh "kubectl get service"
                 }
             }
         }
-        
     }  // Closing stages
 }  // Closing pipeline
 post {
